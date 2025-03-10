@@ -38,6 +38,22 @@ export class SourceService {
     }));
   }
 
+  async getSourceById(id: string) {
+    const source = await this.db.findOne({ id });
+    if (!source) return null;
+
+    return {
+      ...source,
+      credentials: {
+        clientEmail: decrypt(source.credentials.clientEmail),
+        privateKey: decrypt(source.credentials.privateKey),
+        scopes: source.credentials.scopes.map((scope: string) =>
+          decrypt(scope)
+        ),
+      },
+    };
+  }
+
   async deleteSource(id: string) {
     return await this.db.deleteOne({ id });
   }

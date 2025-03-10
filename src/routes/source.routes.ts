@@ -6,12 +6,12 @@ export default async function sourceRoutes(fastify: FastifyInstance) {
   const sourceController = new SourceController(fastify);
 
   fastify.post("/sources", {
-    schema: createSourceSchema, // Apply JSON schema validation
+    schema: createSourceSchema,
     handler: sourceController.createSource,
   });
 
   fastify.delete("/sources/:id", {
-    schema: deleteSourceSchema, // Apply validation for delete
+    schema: deleteSourceSchema,
     handler: sourceController.deleteSource,
   });
 

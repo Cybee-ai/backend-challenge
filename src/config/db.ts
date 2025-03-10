@@ -10,7 +10,7 @@ export default fastifyPlugin(async (fastify) => {
     });
 
     if (!fastify.mongo.db) {
-      throw new Error("MongoDB connection failed! `db` is undefined.");
+      throw new Error("❌ MongoDB connection failed! Database is undefined.");
     }
 
     fastify.log.info("✅ MongoDB connected successfully!");

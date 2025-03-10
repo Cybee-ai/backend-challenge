@@ -1,7 +1,7 @@
 export const createSourceSchema = {
   body: {
     type: "object",
-    required: ["credentials"], // Only "credentials" is required
+    required: ["credentials"],
     properties: {
       credentials: {
         type: "object",
