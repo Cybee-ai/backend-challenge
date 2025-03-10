@@ -1,15 +1,18 @@
 import Fastify from "fastify";
 import dbConnector from "./config/db";
 import dotenv from "dotenv";
+import routes from "./routes";
+import config from "./config/config";
 
 dotenv.config();
 
 const fastify = Fastify({ logger: true });
 
-const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
+const PORT = config.port;
 
 // Register DB Connector
 fastify.register(dbConnector);
+fastify.register(routes, { prefix: "/api/v1" });
 
 // Sample Route
 fastify.get("/", async (request, reply) => {

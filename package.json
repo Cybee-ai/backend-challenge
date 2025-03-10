@@ -11,7 +11,8 @@
   "dependencies": {
     "dotenv": "^16.4.7",
     "fastify": "^5.2.1",
-    "fastify-mongodb": "^4.2.0"
+    "fastify-mongodb": "^4.2.0",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@fastify/mongodb": "^9.0.2",
