@@ -1,0 +1,24 @@
+{
+  "name": "google-workspace-event-integration",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "dev": "nodemon",
+    "build": "tsc",
+    "start": "node -r dotenv/config dist/server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "fastify": "^5.2.1",
+    "fastify-mongodb": "^4.2.0"
+  },
+  "devDependencies": {
+    "@fastify/mongodb": "^9.0.2",
+    "@types/node": "^22.13.10",
+    "fastify-plugin": "^5.0.1",
+    "nodemon": "^3.1.9",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
+  }
+}
