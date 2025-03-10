@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - MONGO_URI=mongodb://mongo:27017/google-workspace-logs
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ELASTIC_NODE=http://elasticsearch:9200
+      - ENCRYPTION_KEY=local_development_key_change_in_production
+      - GOOGLE_API_SCOPES=https://www.googleapis.com/auth/admin.reports.audit.readonly
+      - BULL_PREFIX=google_workspace
+    depends_on:
+      - mongo
+      - redis
+      - elasticsearch
+    volumes:
+      - ./dist:/app/dist
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:6
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+  elasticsearch:
+    image: elasticsearch:8.9.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    restart: unless-stopped
+
+volumes:
+  mongo-data:
+  redis-data:
+  elasticsearch-data: 

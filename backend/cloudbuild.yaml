@@ -1,0 +1,33 @@
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-f', 'Dockerfile.production', '-t', 'gcr.io/$PROJECT_ID/google-workspace-integration:$COMMIT_SHA', '.']
+  
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/google-workspace-integration:$COMMIT_SHA']
+  
+  # Deploy container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+    - 'run'
+    - 'deploy'
+    - 'google-workspace-integration'
+    - '--image=gcr.io/$PROJECT_ID/google-workspace-integration:$COMMIT_SHA'
+    - '--region=us-central1'
+    - '--platform=managed'
+    - '--allow-unauthenticated'
+    - '--memory=512Mi'
+    - '--min-instances=1'
+    - '--max-instances=10'
+    - '--cpu=1'
+    - '--set-env-vars=NODE_ENV=production'
+    - '--set-secrets=MONGO_URI=mongo-uri:latest,REDIS_HOST=redis-host:latest,REDIS_PORT=redis-port:latest,REDIS_PASSWORD=redis-password:latest,ELASTIC_NODE=elastic-node:latest,ELASTIC_USERNAME=elastic-username:latest,ELASTIC_PASSWORD=elastic-password:latest,ENCRYPTION_KEY=encryption-key:latest'
+
+# Store images in Google Container Registry
+images:
+  - 'gcr.io/$PROJECT_ID/google-workspace-integration:$COMMIT_SHA'
+
+# Set timeout to 20 minutes
+timeout: '1200s' 
