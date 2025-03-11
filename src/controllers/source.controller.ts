@@ -33,4 +33,19 @@ export class SourceController {
     await this.sourceService.deleteSource(id);
     return reply.send({ success: true });
   };
+
+  async getSourceStatus(req: FastifyRequest, reply: FastifyReply) {
+    const { sourceId } = req.params as { sourceId: string };
+    const source = await this.sourceService.getSourceById(sourceId);
+
+    if (!source) {
+      return reply.status(404).send({ error: "Source not found" });
+    }
+
+    return reply.send({
+      sourceId,
+      expired: source.expired || false,
+      lastChecked: source.lastChecked || null,
+    });
+  }
 }

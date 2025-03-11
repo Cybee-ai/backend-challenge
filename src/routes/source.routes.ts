@@ -16,4 +16,6 @@ export default async function sourceRoutes(fastify: FastifyInstance) {
   });
 
   fastify.get("/sources", sourceController.getSources);
+
+  fastify.get("/sources/:id/status", sourceController.getSourceStatus);
 }

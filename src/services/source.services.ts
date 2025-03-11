@@ -1,7 +1,8 @@
 import { FastifyInstance } from "fastify";
-import { Collection, Db, ObjectId } from "mongodb";
+import { Collection, ObjectId } from "mongodb";
 import { Source } from "../models/source.model";
 import { decrypt, encrypt } from "../utils/encryption";
+import axios from "axios";
 
 export class SourceService {
   private sourceCollection: Collection<Source>;
@@ -20,6 +21,8 @@ export class SourceService {
     const secureSource = {
       ...source,
       credentials: encryptedCredentials,
+      expired: false,
+      lastChecked: new Date(),
     };
 
     return await this.sourceCollection.insertOne(secureSource);
@@ -59,5 +62,33 @@ export class SourceService {
 
   async deleteSource(id: string) {
     return await this.sourceCollection.deleteOne({ id });
+  }
+
+  async markSourceAsExpired(sourceId: string) {
+    const source = await this.sourceCollection.findOne({
+      _id: new ObjectId(sourceId),
+    });
+
+    if (!source) return;
+
+    await this.sourceCollection.updateOne(
+      { _id: new ObjectId(sourceId) },
+      { $set: { expired: true, lastChecked: new Date() } }
+    );
+
+    console.log(`🚨 Source ${sourceId} marked as expired.`);
+
+    if (source.callbackUrl) {
+      try {
+        await axios.post(source.callbackUrl, {
+          sourceId,
+          expired: true,
+          message: "Your Google credentials have expired. Please update them.",
+        });
+        console.log(`✅ Expiration notification sent to ${source.callbackUrl}`);
+      } catch (error) {
+        console.error(`❌ Failed to notify ${source.callbackUrl}:`, error);
+      }
+    }
   }
 }

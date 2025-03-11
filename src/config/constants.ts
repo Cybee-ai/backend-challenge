@@ -23,4 +23,5 @@ export const ERROR_MESSAGES = {
   MONGO_UNDEFINED: "❌ MongoDB connection is undefined.",
   PROCESS_JOB_FAILED: "❌ Failed to process logs",
   SOURCE_NOT_FOUND: "❌ Source not found.",
+  CREDENTIALS_EXPIRED: "Google credentials have expired",
 };

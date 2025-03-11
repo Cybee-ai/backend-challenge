@@ -67,13 +67,36 @@ export class LogFetchService {
       });
 
       return response.data.items || [];
-    } catch (error) {
-      let errorMessage = ERROR_MESSAGES.FETCH_FAILED;
-      if (error instanceof Error) {
-        errorMessage = `${ERROR_MESSAGES.FETCH_FAILED}: ${error.message}`;
+    } catch (error: any) {
+      console.error(
+        `❌ Error fetching logs for source ${source._id}:`,
+        error.message
+      );
+
+      const statusCode = error.response?.status;
+
+      if (statusCode === 401) {
+        console.error(
+          `🚨 Credentials expired for source ${source._id}. Updating status.`
+        );
+
+        await this.sourceService.markSourceAsExpired(source._id);
+
+        throw new Error(ERROR_MESSAGES.CREDENTIALS_EXPIRED);
       }
 
-      console.error(errorMessage);
+      if (statusCode === 429) {
+        console.warn(`⏳ Google API rate limit hit. Retrying in 30 seconds...`);
+
+        await new Promise((resolve) => setTimeout(resolve, 30000));
+
+        if (retries > 0) {
+          console.log(`${ERROR_MESSAGES.RETRYING} (${retries} retries left)`);
+          return this.fetchLogs(source, retries - 1);
+        } else {
+          throw new Error(ERROR_MESSAGES.MAX_RETRIES_REACHED);
+        }
+      }
 
       if (retries > 0) {
         console.log(`${ERROR_MESSAGES.RETRYING} (${retries} retries left)`);
@@ -138,9 +161,15 @@ export class LogFetchService {
       return;
     }
 
+    if (source.expired) {
+      console.log(`⚠️ Source ${sourceId} is expired. Skipping job scheduling.`);
+      return;
+    }
+
     const existingJob = await this.logFetchQueue.getJob(
       `${JOB_PREFIX}${sourceId}`
     );
+
     if (existingJob) {
       console.log(`⚠️ Job for source ${sourceId} already exists. Skipping.`);
       return;

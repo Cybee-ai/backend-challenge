@@ -10,4 +10,6 @@ export interface Source {
   };
   logFetchInterval: number;
   callbackUrl: string;
+  expired?: boolean; // ✅ Track credential expiration
+  lastChecked?: Date; // ✅ Track last validation check
 }
