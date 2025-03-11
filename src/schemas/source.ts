@@ -16,7 +16,7 @@ export const createSourceSchema = {
           },
         },
       },
-      logFetchInterval: { type: "integer", default: 300, minimum: 20 },
+      logFetchInterval: { type: "integer", default: 300, minimum: 300 },
       callbackUrl: { type: "string", format: "uri" },
     },
   },

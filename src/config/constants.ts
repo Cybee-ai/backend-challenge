@@ -1,7 +1,5 @@
 import config from "./config";
 
-console.log("config ", config);
-
 export const GOOGLE_SCOPES = [
   "https://www.googleapis.com/auth/admin.reports.audit.readonly",
 ];
@@ -23,5 +21,7 @@ export const ERROR_MESSAGES = {
   MONGO_UNDEFINED: "❌ MongoDB connection is undefined.",
   PROCESS_JOB_FAILED: "❌ Failed to process logs",
   SOURCE_NOT_FOUND: "❌ Source not found.",
-  CREDENTIALS_EXPIRED: "Google credentials have expired",
+  CREDENTIALS_EXPIRED: "❌ Google credentials have expired",
+  PERMISSION_DENIED: "❌ Permission denied",
+  RATE_LIMITED: "❌ Rate limit hit",
 };

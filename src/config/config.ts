@@ -27,8 +27,6 @@ if (!parsedConfig.success) {
   process.exit(1);
 }
 
-console.log("process ", process.env);
-
 const config = {
   port: parsedConfig.data.PORT,
   mongoUri: parsedConfig.data.MONGO_URI,

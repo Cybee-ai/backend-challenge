@@ -34,23 +34,24 @@ export class LogFetchService {
     this.isDev = config.NODE_ENV === "dev";
   }
 
-  private async fetchLogs(source: any, retries = RETRY_LIMIT): Promise<any[]> {
-    if (this.isDev) {
-      console.log("🟢 Mock log fetching enabled (DEV mode).");
-
-      return [
-        {
-          id: `log-${Date.now()}`,
-          timestamp: new Date().toISOString(),
-          actor: { email: "test@example.com", ipAddress: "127.0.0.1" },
-          eventType: "TEST_EVENT",
-          details: { status: "SUCCESS" },
-        },
-      ];
-    }
-
+  private async fetchLogs(source: any): Promise<any[]> {
     try {
-      console.log("🔵 Fetching logs from Google Workspace...");
+      throw { response: { status: 429 } };
+
+      if (this.isDev) {
+        console.log("🟢 Mock log fetching enabled (DEV mode).");
+
+        return [
+          {
+            id: `log-${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            actor: { email: "test@example.com", ipAddress: "127.0.0.1" },
+            eventType: "TEST_EVENT",
+            details: { status: "SUCCESS" },
+          },
+        ];
+      }
+      console.log(`🔵 Fetching logs from Google Workspace...`);
 
       const auth = new google.auth.JWT(
         source.credentials.clientEmail,
@@ -67,11 +68,12 @@ export class LogFetchService {
       });
 
       return response.data.items || [];
-    } catch (error: any) {
-      console.error(
-        `❌ Error fetching logs for source ${source._id}:`,
-        error.message
-      );
+    } catch (err: unknown) {
+      const error = err as {
+        response?: { status?: number; headers?: Record<string, string> };
+      };
+
+      console.error(`❌ Error fetching logs for source ${source._id}:`, error);
 
       const statusCode = error.response?.status;
 
@@ -79,31 +81,18 @@ export class LogFetchService {
         console.error(
           `🚨 Credentials expired for source ${source._id}. Updating status.`
         );
-
         await this.sourceService.markSourceAsExpired(source._id);
-
         throw new Error(ERROR_MESSAGES.CREDENTIALS_EXPIRED);
       }
 
       if (statusCode === 429) {
-        console.warn(`⏳ Google API rate limit hit. Retrying in 30 seconds...`);
-
-        await new Promise((resolve) => setTimeout(resolve, 30000));
-
-        if (retries > 0) {
-          console.log(`${ERROR_MESSAGES.RETRYING} (${retries} retries left)`);
-          return this.fetchLogs(source, retries - 1);
-        } else {
-          throw new Error(ERROR_MESSAGES.MAX_RETRIES_REACHED);
-        }
+        console.warn(
+          `⏳ Google API rate limit hit. Letting BullMQ handle the retry.`
+        );
+        throw new Error(ERROR_MESSAGES.RATE_LIMITED); // Let BullMQ retry
       }
 
-      if (retries > 0) {
-        console.log(`${ERROR_MESSAGES.RETRYING} (${retries} retries left)`);
-        return this.fetchLogs(source, retries - 1);
-      } else {
-        throw new Error(ERROR_MESSAGES.MAX_RETRIES_REACHED);
-      }
+      throw new Error(ERROR_MESSAGES.FETCH_FAILED);
     }
   }
 
@@ -121,12 +110,31 @@ export class LogFetchService {
       await axios.post(source.callbackUrl, { logs: savedLogs });
 
       console.log(`✅ Logs sent successfully for source ${source._id}`);
-    } catch (error) {
+    } catch (err: unknown) {
+      const error = err as Error;
+
       let errorMessage = ERROR_MESSAGES.PROCESS_JOB_FAILED;
       if (error instanceof Error) {
         errorMessage += ` for source ${source._id}: ${error.message}`;
       }
+
       console.error(errorMessage);
+
+      // ✅ If credentials expired, stop retries
+      if (error.message.includes(ERROR_MESSAGES.CREDENTIALS_EXPIRED)) {
+        console.log(
+          `🚨 Stopping retries for source ${source._id} as credentials are expired.`
+        );
+        return; // ✅ Do not retry
+      }
+
+      // ✅ If it's a rate limit (`429`), let BullMQ retry
+      if (error.message.includes(ERROR_MESSAGES.RATE_LIMITED)) {
+        console.log(`🔄 Retrying in accordance with BullMQ's retry policy...`);
+        throw error; // ✅ Throw error to let BullMQ retry
+      }
+
+      throw error; // ✅ Ensure BullMQ retries for other failures too
     }
   }
 
@@ -138,15 +146,21 @@ export class LogFetchService {
           await this.processJob(job);
         } catch (error) {
           console.error(
-            `❌ Error processing logs for source ${job.data.source._id}:`,
-            error
+            `❌ Job failed for source ${job.data.source._id}: ${error}`
           );
+
+          if (job.attemptsMade >= 3) {
+            console.error(
+              `🚨 Job for source ${job.data.source._id} failed 3 times. No more retries.`
+            );
+          }
+
           throw error;
         }
       },
       {
         connection,
-        concurrency: QUEUE_CONCURRENCY, // Allow 3 jobs to be processed in parallel as default
+        concurrency: QUEUE_CONCURRENCY,
       }
     );
 
@@ -182,10 +196,10 @@ export class LogFetchService {
         repeat: { every: source.logFetchInterval * 1000 },
         removeOnComplete: true, // ✅ Cleanup completed jobs
         removeOnFail: false, // ✅ Keep failed jobs for debugging
-        attempts: RETRY_LIMIT, // ✅ Max retry attempts (BullMQ handles it)
+        attempts: 3, // ✅ Max 3 retries per failed job
         backoff: {
-          type: "exponential", // ✅ Use exponential backoff
-          delay: 5000, // Start with a 5s delay, increasing exponentially
+          type: "exponential",
+          delay: 5000, // ✅ Starts with 5s, then increases exponentially
         },
       }
     );
