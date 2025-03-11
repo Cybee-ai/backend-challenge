@@ -14,6 +14,7 @@ import {
   QUEUE_CONCURRENCY,
 } from "../config/constants";
 import { SourceService } from "./source.services";
+import { LogService } from "./logsService.service";
 
 const connection = {
   host: REDIS_HOST,
@@ -23,11 +24,13 @@ const connection = {
 export class LogFetchService {
   private logFetchQueue: Queue;
   private sourceService: SourceService;
+  private logService: LogService;
   private isDev: boolean;
 
   constructor(fastify: FastifyInstance) {
     this.logFetchQueue = new Queue(JOB_QUEUE_NAME, { connection });
     this.sourceService = new SourceService(fastify);
+    this.logService = new LogService(fastify);
     this.isDev = config.NODE_ENV === "dev";
   }
 
@@ -86,7 +89,13 @@ export class LogFetchService {
 
     try {
       const logs = await this.fetchLogs(source);
-      await axios.post(source.callbackUrl, { logs });
+
+      const savedLogs = await this.logService.saveLogs(
+        source._id.toString(),
+        logs
+      );
+
+      await axios.post(source.callbackUrl, { logs: savedLogs });
 
       console.log(`✅ Logs sent successfully for source ${source._id}`);
     } catch (error) {

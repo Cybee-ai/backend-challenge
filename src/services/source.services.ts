@@ -1,12 +1,13 @@
 import { FastifyInstance } from "fastify";
+import { Collection, Db, ObjectId } from "mongodb";
 import { Source } from "../models/source.model";
 import { decrypt, encrypt } from "../utils/encryption";
 
 export class SourceService {
-  private db: any;
+  private sourceCollection: Collection<Source>;
 
   constructor(fastify: FastifyInstance) {
-    this.db = fastify.mongo.db?.collection("sources");
+    this.sourceCollection = fastify.mongo.db!.collection("sources");
   }
 
   async createSource(source: Source) {
@@ -21,11 +22,11 @@ export class SourceService {
       credentials: encryptedCredentials,
     };
 
-    return await this.db.insertOne(secureSource);
+    return await this.sourceCollection.insertOne(secureSource);
   }
 
   async getSources() {
-    const sources = await this.db.find().toArray();
+    const sources = await this.sourceCollection.find().toArray();
     return sources.map((source: any) => ({
       ...source,
       credentials: {
@@ -39,7 +40,9 @@ export class SourceService {
   }
 
   async getSourceById(id: string) {
-    const source = await this.db.findOne({ _id: id });
+    const source = await this.sourceCollection.findOne({
+      _id: new ObjectId(id),
+    });
     if (!source) return null;
 
     return {
@@ -55,6 +58,6 @@ export class SourceService {
   }
 
   async deleteSource(id: string) {
-    return await this.db.deleteOne({ id });
+    return await this.sourceCollection.deleteOne({ id });
   }
 }

@@ -18,7 +18,7 @@ export class SourceController {
 
     console.log("result ", result);
 
-    await this.logFetchService.scheduleLogFetch(result.insertedId);
+    await this.logFetchService.scheduleLogFetch(result.insertedId.toString());
 
     return reply.code(201).send({ success: true, id: result.insertedId });
   };
