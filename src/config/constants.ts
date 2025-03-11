@@ -1,5 +1,7 @@
 import config from "./config";
 
+console.log("config ", config);
+
 export const GOOGLE_SCOPES = [
   "https://www.googleapis.com/auth/admin.reports.audit.readonly",
 ];
@@ -11,6 +13,7 @@ export const REDIS_HOST = config.redisHost;
 export const REDIS_PORT = config.redisPort;
 
 export const RETRY_LIMIT = 3;
+export const QUEUE_CONCURRENCY = config.QUEUE_CONCURRENCY ?? 3;
 
 export const ERROR_MESSAGES = {
   FETCH_FAILED: "❌ Error fetching logs from Google Workspace",

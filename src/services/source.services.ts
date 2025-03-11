@@ -39,7 +39,7 @@ export class SourceService {
   }
 
   async getSourceById(id: string) {
-    const source = await this.db.findOne({ id });
+    const source = await this.db.findOne({ _id: id });
     if (!source) return null;
 
     return {

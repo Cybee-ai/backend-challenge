@@ -1,7 +1,7 @@
 export const createSourceSchema = {
   body: {
     type: "object",
-    required: ["credentials"],
+    required: ["credentials", "callbackUrl"],
     properties: {
       credentials: {
         type: "object",
@@ -16,7 +16,7 @@ export const createSourceSchema = {
           },
         },
       },
-      logFetchInterval: { type: "integer", default: 300 },
+      logFetchInterval: { type: "integer", default: 300, minimum: 20 },
       callbackUrl: { type: "string", format: "uri" },
     },
   },

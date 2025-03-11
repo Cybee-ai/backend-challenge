@@ -16,7 +16,9 @@ export class SourceController {
     const source = request.body as Source;
     const result = await this.sourceService.createSource(source);
 
-    await this.logFetchService.scheduleLogFetch(source.id);
+    console.log("result ", result);
+
+    await this.logFetchService.scheduleLogFetch(result.insertedId);
 
     return reply.code(201).send({ success: true, id: result.insertedId });
   };

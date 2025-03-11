@@ -1,7 +1,7 @@
 import Fastify from "fastify";
+import config from "./config/config";
 import dbConnector from "./config/db";
 import routes from "./routes";
-import config from "./config/config";
 import { initializeQueue } from "./queue";
 
 const fastify = Fastify({ logger: true });

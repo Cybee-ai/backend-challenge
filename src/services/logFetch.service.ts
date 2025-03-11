@@ -1,7 +1,8 @@
-import { Queue, Worker, Job } from "bullmq";
+import { Queue, Worker, Job, BackoffOptions } from "bullmq";
 import axios from "axios";
 import { FastifyInstance } from "fastify";
 import { google } from "googleapis";
+import config from "../config/config";
 import {
   ERROR_MESSAGES,
   GOOGLE_SCOPES,
@@ -10,6 +11,7 @@ import {
   REDIS_HOST,
   REDIS_PORT,
   RETRY_LIMIT,
+  QUEUE_CONCURRENCY,
 } from "../config/constants";
 import { SourceService } from "./source.services";
 
@@ -21,14 +23,32 @@ const connection = {
 export class LogFetchService {
   private logFetchQueue: Queue;
   private sourceService: SourceService;
+  private isDev: boolean;
 
   constructor(fastify: FastifyInstance) {
     this.logFetchQueue = new Queue(JOB_QUEUE_NAME, { connection });
     this.sourceService = new SourceService(fastify);
+    this.isDev = config.NODE_ENV === "dev";
   }
 
   private async fetchLogs(source: any, retries = RETRY_LIMIT): Promise<any[]> {
+    if (this.isDev) {
+      console.log("🟢 Mock log fetching enabled (DEV mode).");
+
+      return [
+        {
+          id: `log-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          actor: { email: "test@example.com", ipAddress: "127.0.0.1" },
+          eventType: "TEST_EVENT",
+          details: { status: "SUCCESS" },
+        },
+      ];
+    }
+
     try {
+      console.log("🔵 Fetching logs from Google Workspace...");
+
       const auth = new google.auth.JWT(
         source.credentials.clientEmail,
         undefined,
@@ -67,11 +87,12 @@ export class LogFetchService {
     try {
       const logs = await this.fetchLogs(source);
       await axios.post(source.callbackUrl, { logs });
-      console.log(`✅ Logs sent successfully for source ${source.id}`);
+
+      console.log(`✅ Logs sent successfully for source ${source._id}`);
     } catch (error) {
       let errorMessage = ERROR_MESSAGES.PROCESS_JOB_FAILED;
       if (error instanceof Error) {
-        errorMessage += ` for source ${source.id}: ${error.message}`;
+        errorMessage += ` for source ${source._id}: ${error.message}`;
       }
       console.error(errorMessage);
     }
@@ -85,13 +106,19 @@ export class LogFetchService {
           await this.processJob(job);
         } catch (error) {
           console.error(
-            `❌ Error processing logs for source ${job.data.source.id}:`,
+            `❌ Error processing logs for source ${job.data.source._id}:`,
             error
           );
+          throw error;
         }
       },
-      { connection }
+      {
+        connection,
+        concurrency: QUEUE_CONCURRENCY, // Allow 3 jobs to be processed in parallel as default
+      }
     );
+
+    console.log(`🚀 Worker started in ${this.isDev ? "DEV" : "PROD"} mode.`);
   }
 
   public async scheduleLogFetch(sourceId: string) {
@@ -102,14 +129,31 @@ export class LogFetchService {
       return;
     }
 
+    const existingJob = await this.logFetchQueue.getJob(
+      `${JOB_PREFIX}${sourceId}`
+    );
+    if (existingJob) {
+      console.log(`⚠️ Job for source ${sourceId} already exists. Skipping.`);
+      return;
+    }
+
     await this.logFetchQueue.add(
       `${JOB_PREFIX}${sourceId}`,
       { source },
-      { repeat: { every: source.logFetchInterval * 1000 } }
+      {
+        repeat: { every: source.logFetchInterval * 1000 },
+        removeOnComplete: true, // ✅ Cleanup completed jobs
+        removeOnFail: false, // ✅ Keep failed jobs for debugging
+        attempts: RETRY_LIMIT, // ✅ Max retry attempts (BullMQ handles it)
+        backoff: {
+          type: "exponential", // ✅ Use exponential backoff
+          delay: 5000, // Start with a 5s delay, increasing exponentially
+        },
+      }
     );
 
     console.log(
-      `⏳ Scheduled log fetching for source ${source.id} every ${source.logFetchInterval} seconds.`
+      `⏳ Scheduled log fetching for source ${source._id} every ${source.logFetchInterval} seconds.`
     );
   }
 }
