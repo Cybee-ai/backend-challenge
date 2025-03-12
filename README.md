@@ -1,4 +1,7 @@
+
+<h1 align="center">
 # Backend Challenge: Google Workspace Event Integration
+</h1>
 
 <h1 align="center">
   Backend Challenge Solution
@@ -65,6 +68,31 @@ $ npm start
 ```
 
 The backend challenge should now be up and running. You can inspect the console to see logs. Alternatively, you can connect to MongoDB to view data inside the `sourcedb` and connect to Redis Insights to view the job scheduling inside Redis.
+
+1. Swagger documentation for endpoints
+
+Open http://localhost:3000/swagger/ and view the documented endpoints.
+To use them, you need to provide the API key defined in .env variables.
+We have exposed it here - but in a production environment, this would be the first layer of security.
+
+![image](https://github.com/user-attachments/assets/85d4b55b-7925-469a-a31a-b597b0bd9d8d)
+
+2. Redis Insight
+
+We can also view job schedules internals in Redis Insights.
+Open up Redis insights and connect to the redis running in the Docker container
+
+![image](https://github.com/user-attachments/assets/1e476a03-a521-4472-b5bd-c71f2b2e22ea)
+
+3. MongoDb
+
+We can also view created sources and logs in db
+Open up Mongo Compass and connect to Mongo db running in docker
+
+We can see the following info
+
+![image](https://github.com/user-attachments/assets/8cdb36d7-75e9-4b24-9f3a-c86f674ccfac)
+
 
 ### 2. Dockerized Solution
 
