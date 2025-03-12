@@ -9,6 +9,8 @@
     "start": "node -r dotenv/config dist/server.js"
   },
   "dependencies": {
+    "@fastify/swagger": "^9.4.2",
+    "@fastify/swagger-ui": "^5.2.2",
     "axios": "^1.8.2",
     "bullmq": "^5.41.8",
     "dotenv": "^16.4.7",
