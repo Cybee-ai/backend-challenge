@@ -1,5 +1,7 @@
 export default async function apiKeyPreHandler(request, reply) {
-    const publicRoutes = ['/swagger/'];
+
+  console.log(request.url)
+    const publicRoutes = ['/swagger'];
     if (request.method === 'GET' && publicRoutes.some(route => request.url.startsWith(route))) 
         return;
 

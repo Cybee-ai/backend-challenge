@@ -14,10 +14,10 @@ services:
       - REDIS_PORT=6379
       - NODE_DEBUG=bull
       - NODE_ENV=${NODE_ENV}
+      - DOCKER=1
       - CALLBACK_API_HOOK=http://callbackapi:8080/Hooks/SendLog
     ports:
-      - 3000:3000
-      - 9229:9229
+      - "3000:3000"  
     command: ["npm", "start"]
     depends_on:
       - mongo

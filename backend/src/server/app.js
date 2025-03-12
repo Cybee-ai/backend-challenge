@@ -36,6 +36,7 @@ await setupSwagger(app);
 
 await app.after(); 
 
+
 app.addHook('preHandler', apiKeyPreHandler);
 
 app.register(AutoLoad, {
