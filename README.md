@@ -42,6 +42,7 @@ REDIS_HOST=localhost
 NODE_DEBUG=bull
 NODE_ENV=DEVELOPMENT
 CALLBACK_API_HOOK=http://localhost:8080/Hooks/SendLog
+DOCKER=0
 ```
 
 4. Run these Docker commands:
@@ -117,6 +118,7 @@ $ git clone https://github.com/Bleron213/backend-challenge
 API_KEY=bBJ4Gig5CEVzTWM8l2nVCzX8Ht7IohuAFgsKK1puNmGU4FZormELBoRtjPySs4bAX6st4VOO2Vx8CSxoiQQuzWrrhEWlw2mwF17Boo5hun9Wo0RZZGhgsoK7uXSBD8AR
 ENCRYPTION_KEY=0d932b4a920075ca6bd78fb589b9815d878b1bd06fbf1f7477b69102e8967908
 NODE_ENV=DEVELOPMENT
+DOCKER=1
 ```
 
 4. Start the Docker containers:
