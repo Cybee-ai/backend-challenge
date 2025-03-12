@@ -4,19 +4,15 @@
   Backend Challenge Solution
 </h1>
 
-<p align="center">
-  <strong>Key Features:</strong><br>
-  * API and Background Services, utilizing Bull.mq<br>
-  * Dockerized<br>
-  * Resilient<br>
-</p>
+<strong>Key Features:</strong><br>
+* API and Background Services, utilizing Bull.mq<br>
+* Dockerized<br>
+* Resilient<br>
 
-<p align="center">
-  <strong>Technology Stack:</strong><br>
-  * Node.js<br>
-  * MongoDB<br>
-  * Redis<br>
-</p>
+<strong>Technology Stack:</strong><br>
+* Node.js<br>
+* MongoDB<br>
+* Redis<br>
 
 ---
 
