@@ -1,5 +1,3 @@
-# Backend Challenge: Google Workspace Event Integration
-
 <h1 align="center">
   Backend Challenge Solution
 </h1>
