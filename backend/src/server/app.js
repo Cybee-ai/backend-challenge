@@ -5,8 +5,10 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import apiKeyPreHandler from './middlewares/apiKey.preHandler.js';
 import connectDB from '../data/models/db.js';
-import './background-processing/bullmq.js'
 import seedDb from './seed.js';
+
+import './background-processing/bullmq.js'
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

@@ -6,7 +6,17 @@ export const addSourceSchema = {
       id: { type: 'string', format: 'uuid' },
       sourceType: { type: 'string', enum: ['google_workspace'] },
       credentials: {
-        type: 'object'
+        type: 'object',
+        required: ['clientEmail', 'privateKey', 'scopes'],
+        properties: {
+          clientEmail: { type: 'string', format: 'email' },
+          privateKey: { type: 'string' },
+          scopes: {
+            type: 'array',
+            items: { type: 'string' },
+            minItems: 1
+          }
+        }
       },
       logFetchInterval: { type: 'integer', minimum: 60,  },
       callbackUrl: { type: 'string', format: 'uri',  },

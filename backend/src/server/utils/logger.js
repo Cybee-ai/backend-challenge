@@ -4,8 +4,9 @@ import pino from 'pino';
       transport: {
         targets: [
           {
+            level: 'info',
             target: 'pino-pretty',
-            options: { colorize: true },
+            options: {}
           },
         ],
       },

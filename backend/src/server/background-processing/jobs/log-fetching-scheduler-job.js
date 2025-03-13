@@ -1,11 +1,8 @@
-import Source from "../../data/models/Source.js"
-import {sourceJobsQueue, logFetchingSchedulerQueue} from './bullmq.js'
-import { Worker } from "bullmq"
-import { redisConnection } from './redis-connection.js';
-import axios from "axios";
-import { handleLogFetch } from "./callback-api-handler.js";
-import logger from './logger.js';
+import Source from "../../../data/models/Source.js"
+import logger from '../../utils/logger.js';
+import { logFetchingQueue } from "../queues/log-fetching-queue.js";
 
+// eslint-disable-next-line no-unused-vars
 export const scheduleLogFetchingJobs = async (job) => {
     try{
 
@@ -16,15 +13,15 @@ export const scheduleLogFetchingJobs = async (job) => {
             return;
         }
 
-        const waitingJobs = await sourceJobsQueue.getJobs(['waiting']);
-        const activeJobs = await sourceJobsQueue.getJobs(['active']);
-        const delayedJobs = await sourceJobsQueue.getJobs(['delayed']);
+        const waitingJobs = await logFetchingQueue.getJobs(['waiting']);
+        const activeJobs = await logFetchingQueue.getJobs(['active']);
+        const delayedJobs = await logFetchingQueue.getJobs(['delayed']);
         
         const allJobs = [...waitingJobs, ...activeJobs, ...delayedJobs];
     
         for(const source of sources){
     
-            const jobId = `source-${source.id}`;
+            const jobId = `process-source-logs-${source.id}`;
 
             const existingJob = allJobs.find(job => job.name === jobId)
     
@@ -32,7 +29,7 @@ export const scheduleLogFetchingJobs = async (job) => {
                 continue;
             }
 
-            await sourceJobsQueue.upsertJobScheduler(jobId, 
+            await logFetchingQueue.upsertJobScheduler(jobId, 
                 {
                     every: source.logFetchInterval * 1000
                 },
@@ -49,11 +46,5 @@ export const scheduleLogFetchingJobs = async (job) => {
         logger.error(error)
     }
 }
-
-const worker = new Worker(
-    'source-jobs',
-    async job => await handleLogFetch(job),
-    { connection: redisConnection }
-  );
 
 

@@ -35,6 +35,7 @@ const sourceSchema = new mongoose.Schema({
     },
   },
   credentials: { type: String, required: true }, 
+  expired: {type: Boolean, default: false},
 }, { timestamps: true });
 
 sourceSchema.pre('save', function (next) {

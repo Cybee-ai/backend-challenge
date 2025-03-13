@@ -1,29 +1,6 @@
-import { Queue, Worker } from 'bullmq';
-import {scheduleLogFetchingJobs} from './log-fetching-scheduler.js'
-import { redisConnection } from './redis-connection.js';
+import './queues/log-fetching-scheduler-queue.js'
+import './queues/source-queue.js'
 
-
-export const logFetchingSchedulerQueue = new Queue('log-fetching-scheduler', { connection: redisConnection });
-
-await logFetchingSchedulerQueue.upsertJobScheduler(
-    'check-source-entries', 
-    {
-      every: 3000, 
-    },
-    {
-      data: {},
-      opts: {
-        removeOnComplete: true
-      }, 
-    }
-  );
-  
-  new Worker(
-    'log-fetching-scheduler',
-    async job => await scheduleLogFetchingJobs(job),
-    { connection: redisConnection }
-  );
-
-
-
-export const sourceJobsQueue = new Queue('source-jobs', { connection: redisConnection });
+import './workers/log-fetching-scheduler-worker.js'
+import './workers/source-jobs-worker.js'
+import './workers/log-fetching-worker.js';

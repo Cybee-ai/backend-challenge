@@ -1,11 +1,23 @@
 import Source from '../../data/models/Source.js';
+import { checkCredentialsExpired } from '../utils/credentials.service.js';
 
 export const addSource = async (request, reply) => {
     const body = request.body;
 
-    const sourceExists = await Source.exists({id:body.id});
-    if(sourceExists){
-        throw new Error('An item with this id already exists');
+    const sourceExists = await Source.exists({ id: body.id });
+    if (sourceExists) {
+        return reply.code(409).send({
+            message: 'Source already exists'
+        });
+    }
+
+    // validate credentials before storing them
+    const validated = await checkCredentialsExpired(body.credentials)
+    if(!validated.error){
+        return reply.code(400).send({
+            message: 'Credentials don`t appear to be valid',
+            error: validated.error
+        });    
     }
 
     const newSource = new Source({id:body.id, sourceType: body.sourceType, callbackUrl: body.callbackUrl, logFetchInterval: body.logFetchInterval, credentials: JSON.stringify(body.credentials)});
@@ -17,6 +29,7 @@ export const addSource = async (request, reply) => {
 };
   
 
+// eslint-disable-next-line no-unused-vars
 export const removeSource = async (request, reply) => {
     const {id} = request.params;
     const source = await Source.findOne({  id });
@@ -40,7 +53,6 @@ export const getActiveSources = async (request, reply) => {
                 sourceType: source.sourceType,
                 logFetchInterval: source.logFetchInterval,
                 callbackUrl: source.callbackUrl,
-                // credentials: JSON.parse(source.getDecryptedData())
             }
 
         } catch {
@@ -49,7 +61,6 @@ export const getActiveSources = async (request, reply) => {
                 sourceType: source.sourceType,
                 logFetchInterval: source.logFetchInterval,
                 callbackUrl: source.callbackUrl,
-                // credentials: source.getDecryptedData()
             }
         }
     });
