@@ -51,12 +51,6 @@ docker run -d -p 8080:8080 --name callbackapi-container -e ASPNETCORE_ENVIRONMEN
 
 ```
 
-Note: callbackapi-container might have issues on mac. If it doesn't work, please use the following command
-
-```bash
-docker run -d --platform linux/amd64 -p 8080:8080 --name callbackapi-container -e ASPNETCORE_ENVIRONMENT=Development bleronqorri/callbackapi:latest
-```
-
 5. Install dependencies and start the backend:
 
 ```bash
@@ -68,6 +62,43 @@ npm start
 ```
 
 The backend challenge should now be up and running. You can inspect the console to see logs. Alternatively, you can connect to MongoDB to view data inside the `sourcedb` and connect to Redis Insights to view the job scheduling inside Redis.
+
+---
+
+### 2. Dockerized Solution
+
+#### Clone the Repository
+
+```bash
+# Clone this repository
+$ git clone https://github.com/Bleron213/backend-challenge
+```
+
+#### Setting Up the Local Environment
+
+1. Open the folder where the solution was cloned.
+2. Open a terminal and move to the `backend` folder.
+3. Inside the `backend` folder, create a file named `.env` and place these environment variables inside:
+
+```dotenv
+API_KEY=bBJ4Gig5CEVzTWM8l2nVCzX8Ht7IohuAFgsKK1puNmGU4FZormELBoRtjPySs4bAX6st4VOO2Vx8CSxoiQQuzWrrhEWlw2mwF17Boo5hun9Wo0RZZGhgsoK7uXSBD8AR
+ENCRYPTION_KEY=0d932b4a920075ca6bd78fb589b9815d878b1bd06fbf1f7477b69102e8967908
+NODE_ENV=DEVELOPMENT
+DOCKER=1
+```
+
+4. Start the Docker containers:
+
+```bash
+# Start the containers with Docker Compose
+$ docker-compose up
+```
+
+The backend challenge should now be up and running. You can inspect the console to see logs. Alternatively, you can connect to MongoDB to view data inside the `sourcedb` and connect to Redis Insights to view the job scheduling inside Redis.
+
+---
+
+## Seein everything in action
 
 #### 1. Swagger documentation for endpoints
 
@@ -101,61 +132,17 @@ Here we can see logs being processed. Due to the aggressive rate limiter in the 
 
 ---
 
-### 2. Dockerized Solution
+## Notes
 
-#### Clone the Repository
-
-```bash
-# Clone this repository
-$ git clone https://github.com/Bleron213/backend-challenge
-```
-
-#### Setting Up the Local Environment
-
-1. Open the folder where the solution was cloned.
-2. Open a terminal and move to the `backend` folder.
-3. Inside the `backend` folder, create a file named `.env` and place these environment variables inside:
-
-```dotenv
-API_KEY=bBJ4Gig5CEVzTWM8l2nVCzX8Ht7IohuAFgsKK1puNmGU4FZormELBoRtjPySs4bAX6st4VOO2Vx8CSxoiQQuzWrrhEWlw2mwF17Boo5hun9Wo0RZZGhgsoK7uXSBD8AR
-ENCRYPTION_KEY=0d932b4a920075ca6bd78fb589b9815d878b1bd06fbf1f7477b69102e8967908
-NODE_ENV=DEVELOPMENT
-DOCKER=1
-```
-
-4. Start the Docker containers:
+- In a production environment, we would never expose API keys or encryption keys like this. For demo purposes, this is fine.
+- callbackapi-container might have issues on mac. If it doesn't work, please use the following command (if locally)
 
 ```bash
-# Start the containers with Docker Compose
-$ docker-compose up
+docker run -d --platform linux/amd64 -p 8080:8080 --name callbackapi-container -e ASPNETCORE_ENVIRONMENT=Development bleronqorri/callbackapi:latest
 ```
 
-Note: callbackapi-container might have issues on mac. If it doesn't work, please include the platform on callbackapi in docker-compose.yml
+or if using docker compose, include platform in callbackapi settings
 
 ```bash
   platform: linux/amd64
 ```
-
-The backend challenge should now be up and running. You can inspect the console to see logs. Alternatively, you can connect to MongoDB to view data inside the `sourcedb` and connect to Redis Insights to view the job scheduling inside Redis.
-
-#### 1. Swagger documentation for endpoints
-
-![Swagger](https://github.com/user-attachments/assets/85d4b55b-7925-469a-a31a-b597b0bd9d8d)
-
-#### 2. Redis Insight
-
-![Redis Insights](https://github.com/user-attachments/assets/1e476a03-a521-4472-b5bd-c71f2b2e22ea)
-
-#### 3. MongoDB
-
-![MongoDB](https://github.com/user-attachments/assets/8cdb36d7-75e9-4b24-9f3a-c86f674ccfac)
-
-#### 4. Resilience in Action
-
-![Resilience Logs](https://github.com/user-attachments/assets/23b52a9a-f5e6-4c0a-a12c-ff87dee9a704)
-
----
-
-## Notes
-
-- In a production environment, we would never expose API keys or encryption keys like this. For demo purposes, this is fine.
