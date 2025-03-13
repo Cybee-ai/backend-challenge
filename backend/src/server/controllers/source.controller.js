@@ -44,7 +44,7 @@ export const removeSource = async (request, reply) => {
 }
 
 export const getActiveSources = async (request, reply) => {
-    const sources = await Source.find();
+    const sources = await Source.find({ expired: false });
 
     const transformedSources = sources.map(source => {
         try {

@@ -4,6 +4,7 @@ import axiosRetry from "axios-retry";
 import logger from "../../utils/logger.js";
 import Log from "../../../data/models/Log.js";
 import {checkSourceCredentialsExpired} from '../../utils/credentials.service.js'
+import { credentialsExpirationEmail } from "../../utils/email.js";
 
 axiosRetry(axios, { 
   retries: 3,
@@ -78,6 +79,11 @@ export const handleLogFetch = async (job) => {
                     $set: { expired: true } 
                 }
             );
+            const credentials = source.getDecryptedData();
+
+            if(credentials && credentials.clientEmail){
+                await credentialsExpirationEmail(source.id, credentials.clientEmail)
+            }
             return;
         }
       }

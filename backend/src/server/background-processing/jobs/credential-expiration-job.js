@@ -3,6 +3,7 @@ import { Worker } from "bullmq"
 import { redisConnection } from '../config/redis-connection.js';
 import logger from '../../utils/logger.js';
 import {checkSourceCredentialsExpired} from '../../utils/credentials.service.js'
+import { credentialsExpirationEmail } from "../../utils/email.js";
 
 export const CREDENTIAL_EXPIRATION_JOB_NAME = "credentialsExpirationJob";
 // eslint-disable-next-line no-unused-vars
@@ -31,6 +32,12 @@ export const credentialsExpirationJob = async (job) => {
                         $set: { expired: true } 
                     }
                 );
+
+                const credentials = source.getDecryptedData();
+                
+                if(credentials && credentials.clientEmail){
+                    await credentialsExpirationEmail(source.id, credentials.clientEmail)
+                }
             }
         }
 
