@@ -130,6 +130,12 @@ DOCKER=1
 $ docker-compose up
 ```
 
+Note: callbackapi-container might have issues on mac. If it doesn't work, please include the platform on callbackapi in docker-compose.yml
+
+```bash
+  platform: linux/amd64
+```
+
 The backend challenge should now be up and running. You can inspect the console to see logs. Alternatively, you can connect to MongoDB to view data inside the `sourcedb` and connect to Redis Insights to view the job scheduling inside Redis.
 
 #### 1. Swagger documentation for endpoints
