@@ -21,8 +21,7 @@
 #### Clone the Repository
 
 ```bash
-# Clone this repository
-$ git clone https://github.com/Bleron213/backend-challenge
+git clone https://github.com/Bleron213/backend-challenge
 ```
 
 #### Setting Up the Local Environment
@@ -46,21 +45,26 @@ DOCKER=0
 4. Run these Docker commands:
 
 ```bash
-$ docker run --name mongodb -d -p 27017:27017 mongo
-$ docker run --name redis-server -p 6379:6379 -d redis
-$ docker run -d -p 8080:8080 --name callbackapi-container -e ASPNETCORE_ENVIRONMENT=Development bleronqorri/callbackapi:latest
+docker run --name mongodb -d -p 27017:27017 mongo
+docker run --name redis-server -p 6379:6379 -d redis
+docker run -d -p 8080:8080 --name callbackapi-container -e ASPNETCORE_ENVIRONMENT=Development bleronqorri/callbackapi:latest
+
+```
+
+Note: callbackapi-container might have issues on mac. If it doesn't work, please use the following command
+
+```bash
+docker run -d --platform linux/amd64 -p 8080:8080 --name callbackapi-container -e ASPNETCORE_ENVIRONMENT=Development bleronqorri/callbackapi:latest
 ```
 
 5. Install dependencies and start the backend:
 
 ```bash
-# npm install
-$ npm install
+npm install
 ```
 
 ```bash
-# npm start
-$ npm start
+npm start
 ```
 
 The backend challenge should now be up and running. You can inspect the console to see logs. Alternatively, you can connect to MongoDB to view data inside the `sourcedb` and connect to Redis Insights to view the job scheduling inside Redis.
@@ -124,6 +128,12 @@ DOCKER=1
 ```bash
 # Start the containers with Docker Compose
 $ docker-compose up
+```
+
+Note: callbackapi-container might have issues on mac. If it doesn't work, please include the platform on callbackapi in docker-compose.yml
+
+```bash
+  platform: linux/amd64
 ```
 
 The backend challenge should now be up and running. You can inspect the console to see logs. Alternatively, you can connect to MongoDB to view data inside the `sourcedb` and connect to Redis Insights to view the job scheduling inside Redis.
