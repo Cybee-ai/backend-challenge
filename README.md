@@ -51,12 +51,6 @@ docker run -d -p 8080:8080 --name callbackapi-container -e ASPNETCORE_ENVIRONMEN
 
 ```
 
-Note: callbackapi-container might have issues on mac. If it doesn't work, please use the following command
-
-```bash
-docker run -d --platform linux/amd64 -p 8080:8080 --name callbackapi-container -e ASPNETCORE_ENVIRONMENT=Development bleronqorri/callbackapi:latest
-```
-
 5. Install dependencies and start the backend:
 
 ```bash
@@ -130,12 +124,6 @@ DOCKER=1
 $ docker-compose up
 ```
 
-Note: callbackapi-container might have issues on mac. If it doesn't work, please include the platform on callbackapi in docker-compose.yml
-
-```bash
-  platform: linux/amd64
-```
-
 The backend challenge should now be up and running. You can inspect the console to see logs. Alternatively, you can connect to MongoDB to view data inside the `sourcedb` and connect to Redis Insights to view the job scheduling inside Redis.
 
 #### 1. Swagger documentation for endpoints
@@ -159,3 +147,14 @@ The backend challenge should now be up and running. You can inspect the console 
 ## Notes
 
 - In a production environment, we would never expose API keys or encryption keys like this. For demo purposes, this is fine.
+- callbackapi-container might have issues on mac. If it doesn't work, please use the following command (if locally)
+
+```bash
+docker run -d --platform linux/amd64 -p 8080:8080 --name callbackapi-container -e ASPNETCORE_ENVIRONMENT=Development bleronqorri/callbackapi:latest
+```
+
+or if using docker compose, include platform in callbackapi settings
+
+```bash
+  platform: linux/amd64
+```
