@@ -16,7 +16,42 @@
 
 ## How To Use
 
-### 1. Non-Dockerized Solution
+### 1. Dockerized Solution
+
+#### Clone the Repository
+
+```bash
+# Clone this repository
+$ git clone https://github.com/Bleron213/backend-challenge
+```
+
+#### Setting Up the Local Environment
+
+1. Open the folder where the solution was cloned.
+2. Open a terminal and move to the `backend` folder.
+3. Inside the `backend` folder, create a file named `.env` and place these environment variables inside:
+
+```dotenv
+API_KEY=bBJ4Gig5CEVzTWM8l2nVCzX8Ht7IohuAFgsKK1puNmGU4FZormELBoRtjPySs4bAX6st4VOO2Vx8CSxoiQQuzWrrhEWlw2mwF17Boo5hun9Wo0RZZGhgsoK7uXSBD8AR
+ENCRYPTION_KEY=0d932b4a920075ca6bd78fb589b9815d878b1bd06fbf1f7477b69102e8967908
+NODE_ENV=DEVELOPMENT
+DOCKER=1
+```
+
+4. Start the Docker containers:
+
+```bash
+# Start the containers with Docker Compose
+$ docker-compose up
+```
+
+The backend challenge should now be up and running. You can inspect the console to see logs. Alternatively, you can connect to MongoDB to view data inside the `sourcedb` and connect to Redis Insights to view the job scheduling inside Redis.
+
+---
+
+### 2. Non-Dockerized Solution
+
+If for any reason you want to start the solution without docker, here's how:
 
 #### Clone the Repository
 
@@ -64,39 +99,6 @@ npm install
 
 ```bash
 npm start
-```
-
-The backend challenge should now be up and running. You can inspect the console to see logs. Alternatively, you can connect to MongoDB to view data inside the `sourcedb` and connect to Redis Insights to view the job scheduling inside Redis.
-
----
-
-### 2. Dockerized Solution
-
-#### Clone the Repository
-
-```bash
-# Clone this repository
-$ git clone https://github.com/Bleron213/backend-challenge
-```
-
-#### Setting Up the Local Environment
-
-1. Open the folder where the solution was cloned.
-2. Open a terminal and move to the `backend` folder.
-3. Inside the `backend` folder, create a file named `.env` and place these environment variables inside:
-
-```dotenv
-API_KEY=bBJ4Gig5CEVzTWM8l2nVCzX8Ht7IohuAFgsKK1puNmGU4FZormELBoRtjPySs4bAX6st4VOO2Vx8CSxoiQQuzWrrhEWlw2mwF17Boo5hun9Wo0RZZGhgsoK7uXSBD8AR
-ENCRYPTION_KEY=0d932b4a920075ca6bd78fb589b9815d878b1bd06fbf1f7477b69102e8967908
-NODE_ENV=DEVELOPMENT
-DOCKER=1
-```
-
-4. Start the Docker containers:
-
-```bash
-# Start the containers with Docker Compose
-$ docker-compose up
 ```
 
 The backend challenge should now be up and running. You can inspect the console to see logs. Alternatively, you can connect to MongoDB to view data inside the `sourcedb` and connect to Redis Insights to view the job scheduling inside Redis.
