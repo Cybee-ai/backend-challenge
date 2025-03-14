@@ -40,6 +40,8 @@ NODE_DEBUG=bull
 NODE_ENV=DEVELOPMENT
 CALLBACK_API_HOOK=http://localhost:8080/Hooks/SendLog
 DOCKER=0
+ELASTIC_SEARCH_NODE=http://localhost:9200
+
 ```
 
 4. Run these Docker commands:
@@ -48,7 +50,10 @@ DOCKER=0
 docker run --name mongodb -d -p 27017:27017 mongo
 docker run --name redis-server -p 6379:6379 -d redis
 docker run -d -p 8080:8080 --name callbackapi-container -e ASPNETCORE_ENVIRONMENT=Development bleronqorri/callbackapi:latest
+docker network create backend-challenge-network
 
+docker run -d --name elasticsearch --network backend-challenge-network -e "discovery.type=single-node" -e "xpack.security.enabled=false" -p 9200:9200 docker.elastic.co/elasticsearch/elasticsearch:8.3.3
+docker run -d --name kibana --network backend-challenge-network -p 5601:5601 -e ELASTICSEARCH_HOSTS="http://elasticsearch:9200" -e XPACK_SECURITY_ENABLED=false docker.elastic.co/kibana/kibana:8.3.3
 ```
 
 5. Install dependencies and start the backend:
@@ -98,7 +103,7 @@ The backend challenge should now be up and running. You can inspect the console 
 
 ---
 
-## Seein everything in action
+## Seeing everything in action
 
 #### 1. Swagger documentation for endpoints
 
@@ -130,12 +135,27 @@ We can see the following info:
 
 Here we can see logs being processed. Due to the aggressive rate limiter in the callback API, retries will be quite common.
 
+#### 5. Elastic and Kibana
+
+If we navigate to KIbana -> Left Hamburger Menu -> Discover, we can see the following screen
+
+![image](https://github.com/user-attachments/assets/5a3adbca-beea-4e7c-b70b-51579e86ba6c)
+
+This means that Elastic search is accepting logs. To view them, we can create a new view
+
+![image](https://github.com/user-attachments/assets/28242240-8ef9-4381-973b-23f1900ee641)
+
+And we will be able to see application logs flowing in from Node.js app. Through the use of child loggers, we can differentiate between background processes and fastify api logs.
+
+Note that we're not restricted to application logs. We can create indexes for other things such as business events, products - anything. For now, we can see application logs flowing in seamlessly.
+
 ---
 
 ## Notes
 
 - In a production environment, we would never expose API keys or encryption keys like this. For demo purposes, this is fine.
 - callbackapi-container might have issues on mac. If it doesn't work, please use the following command (if locally)
+- For demo purposes, security has been disabled in Elastic & Kibana.
 
 ```bash
 docker run -d --platform linux/amd64 -p 8080:8080 --name callbackapi-container -e ASPNETCORE_ENVIRONMENT=Development bleronqorri/callbackapi:latest
