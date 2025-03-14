@@ -1,0 +1,87 @@
+version: '3.4'
+
+services:
+  backendchallenge:
+    image: backendchallenge
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment: 
+      - API_KEY=${API_KEY} 
+      - MONGO_URI=mongodb://mongo:27017/sourcedb
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - REDIS_HOST=redis-server
+      - REDIS_PORT=6379
+      - NODE_DEBUG=bull
+      - NODE_ENV=${NODE_ENV}
+      - DOCKER=1
+      - CALLBACK_API_HOOK=http://callbackapi:8080/Hooks/SendLog
+      - ELASTIC_SEARCH_NODE=http://elasticsearch:9200
+    ports:
+      - "3000:3000"  
+    command: ["npm", "start"]
+    depends_on:
+      - mongo
+      - redis-server
+      - elasticsearch
+    networks:
+      - backend-challenge-network
+
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - backend-challenge-network
+
+  redis-server:
+    image: redis:latest
+    container_name: redis-server
+    ports:
+      - "6379:6379"
+    networks:
+      - backend-challenge-network
+    volumes:
+      - redis_data:/data
+
+  callbackapi:
+    image: bleronqorri/callbackapi:latest
+    container_name: callbackapi
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "8080:8080"
+    networks:
+      - backend-challenge-network
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.3.3
+    environment:
+      - discovery.type=single-node
+      # Elasticsearch 8.x has HTTPS and auth on by default. This option is
+      # needed to use HTTP and no auth (as used in the tests)
+      # for demo purposes, this is fine.
+      - xpack.security.enabled=false
+    container_name: elasticsearch
+    ports: ['9200:9200']
+    networks:
+      - backend-challenge-network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.3.3
+    container_name: kibana
+    ports: ['5601:5601']
+    depends_on: ['elasticsearch']
+    networks:
+      - backend-challenge-network
+
+volumes:
+  mongo_data:
+  redis_data:
+
+networks:
+  backend-challenge-network:
+    driver: bridge
