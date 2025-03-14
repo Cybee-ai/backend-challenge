@@ -11,6 +11,7 @@
 * Node.js<br>
 * MongoDB<br>
 * Redis<br>
+* Elasticsearch and Kibana <br>
 
 ---
 
