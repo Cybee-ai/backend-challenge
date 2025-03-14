@@ -6,31 +6,18 @@ import { dirname, join } from 'path';
 import apiKeyPreHandler from './middlewares/apiKey.preHandler.js';
 import connectDB from '../data/models/db.js';
 import seedDb from './seed.js';
+import { logger, initLogger, streamToElastic } from './utils/logging/logger.js';
 
 import './background-processing/bullmq.js'
-
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const envToLogger = {
-  DEVELOPMENT: {
-    transport: {
-      targets: [
-          {
-              level: 'info',
-              target: 'pino-pretty',
-              options: {}
-          }
-      ],
-    },
-  },
-  production: true,
-  test: false,
-}
+var childLogger = logger.child({source:'node-api'});
 
-const app = Fastify({ logger: envToLogger[process.env.NODE_ENV] ?? true });
+const app = Fastify({ loggerInstance: childLogger });
 
+await initLogger();
 await connectDB();
 await seedDb();
 
@@ -63,6 +50,16 @@ app.setErrorHandler((error, request, reply) => {
     .header('Content-Type', 'application/problem+json')
     .send(problemDetails);
 });
+
+
+// Capture errors like unable to connect Elasticsearch instance.
+ streamToElastic.on('error', (error) => {
+  console.error('Elasticsearch client error:', error);
+})
+// Capture errors returned from Elasticsearch, "it will be called every time a document can't be indexed".
+streamToElastic.on('insertError', (error) => {
+  console.error('Elasticsearch server error:', error);
+})
 
 
 export default app;

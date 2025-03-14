@@ -1,9 +1,11 @@
 import Source from "../../../data/models/Source.js"
 import { Worker } from "bullmq"
 import { redisConnection } from '../config/redis-connection.js';
-import logger from '../../utils/logger.js';
+import {logger as parentLogger} from '../../utils/logging/logger.js';
 import {checkSourceCredentialsExpired} from '../../utils/credentials.service.js'
 import { credentialsExpirationEmail } from "../../utils/email.js";
+
+const logger = parentLogger.child({source:'background-processing'});
 
 export const CREDENTIAL_EXPIRATION_JOB_NAME = "credentialsExpirationJob";
 // eslint-disable-next-line no-unused-vars

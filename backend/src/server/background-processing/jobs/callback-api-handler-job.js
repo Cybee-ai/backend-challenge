@@ -1,10 +1,12 @@
 import Source from "../../../data/models/Source.js";
 import axios from "axios";
 import axiosRetry from "axios-retry";
-import logger from "../../utils/logger.js";
+import {logger as parentLogger} from '../../utils/logging/logger.js';
 import Log from "../../../data/models/Log.js";
 import {checkSourceCredentialsExpired} from '../../utils/credentials.service.js'
 import { credentialsExpirationEmail } from "../../utils/email.js";
+
+const logger = parentLogger.child({source:'background-processing'});
 
 axiosRetry(axios, { 
   retries: 3,
@@ -138,7 +140,7 @@ export const handleLogFetch = async (job) => {
   const generateLogs = () => {
     let logs = [];
 
-    for (let i = 0; i < 5000; i++) {
+    for (let i = 0; i < 500; i++) {
       const log = {
         id: `log-id-${i + 1}`,
         timestamp: new Date().toISOString(),  // Current timestamp

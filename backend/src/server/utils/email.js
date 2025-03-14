@@ -1,5 +1,5 @@
 import { createTransport } from "nodemailer";
-import logger from "./logger.js";
+import {logger} from './logging/logger.js'
 
 export const credentialsExpirationEmail = async (id, email) => {
     let transporter = createTransport({

@@ -1,5 +1,5 @@
 import { google } from 'googleapis';
-import logger from './logger.js'
+import {logger} from './logging/logger.js'
 
 export const checkSourceCredentialsExpired = async (source) => {
     try {

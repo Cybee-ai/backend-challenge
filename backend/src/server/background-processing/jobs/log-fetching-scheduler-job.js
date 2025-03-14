@@ -1,6 +1,8 @@
 import Source from "../../../data/models/Source.js"
-import logger from '../../utils/logger.js';
+import {logger as parentLogger} from '../../utils/logging/logger.js';
 import { logFetchingQueue } from "../queues/log-fetching-queue.js";
+
+const logger = parentLogger.child({source:'background-processing'});
 
 // eslint-disable-next-line no-unused-vars
 export const scheduleLogFetchingJobs = async (job) => {
