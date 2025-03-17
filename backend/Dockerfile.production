@@ -1,0 +1,52 @@
+FROM node:18-alpine AS builder
+
+# Create app directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies, including devDependencies
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Build the application
+RUN npm run build
+
+# Create optimized production image
+FROM node:18-alpine
+
+# Create app directory
+WORKDIR /app
+
+# Set node environment
+ENV NODE_ENV=production
+
+# Install only production dependencies
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Copy built application from builder stage
+COPY --from=builder /app/dist ./dist
+
+# Set default environment variables
+ENV PORT=8080
+ENV MONGO_URI=mongodb://mongo:27017/google-workspace-logs
+ENV REDIS_HOST=redis
+ENV ELASTIC_NODE=http://elasticsearch:9200
+
+# Expose port (Cloud Run uses PORT env variable)
+EXPOSE 8080
+
+# Use a non-root user for security
+RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -G nodejs
+USER nodejs
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD wget -q --spider http://localhost:8080/api/health || exit 1
+
+# Set up command to run the app
+CMD ["node", "dist/index.js"] 

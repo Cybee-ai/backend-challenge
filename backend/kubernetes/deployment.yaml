@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: google-workspace-integration
+  labels:
+    app: google-workspace-integration
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: google-workspace-integration
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: google-workspace-integration
+    spec:
+      containers:
+      - name: google-workspace-integration
+        image: gcr.io/PROJECT_ID/google-workspace-integration:latest
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        ports:
+        - containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "8080"
+        # Secret environment variables
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              name: google-workspace-secrets
+              key: mongo-uri
+        - name: REDIS_HOST
+          valueFrom:
+            secretKeyRef:
+              name: google-workspace-secrets
+              key: redis-host
+        - name: REDIS_PORT
+          valueFrom:
+            secretKeyRef:
+              name: google-workspace-secrets
+              key: redis-port
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: google-workspace-secrets
+              key: redis-password
+        - name: ELASTIC_NODE
+          valueFrom:
+            secretKeyRef:
+              name: google-workspace-secrets
+              key: elastic-node
+        - name: ELASTIC_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: google-workspace-secrets
+              key: elastic-username
+        - name: ELASTIC_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: google-workspace-secrets
+              key: elastic-password
+        - name: ENCRYPTION_KEY
+          valueFrom:
+            secretKeyRef:
+              name: google-workspace-secrets
+              key: encryption-key 
