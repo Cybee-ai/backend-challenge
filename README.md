@@ -1,118 +1,218 @@
-# Backend Challenge: Google Workspace Event Integration
+# Google Workspace Event Integration Challenge
 
-## Introduction
-Welcome to the **Cybee.ai Backend Challenge**!  
+A scalable service that fetches logs from Google Workspace and forwards them to a webhook, with built-in monitoring, retries, and scheduling capabilities.
 
-This challenge will test your ability to **integrate with a cloud event source**, specifically **Google Workspace Admin SDK logs**, and build a system that:
-1. **Accepts a new source** (`POST /add-source`) with authentication credentials.
-2. **Periodically fetches logs** from Google Workspace.
-3. **Processes and forwards logs** to a specified callback URL.
-4. **Handles edge cases** like API rate limits, failures, and credential expiration.
+## Architecture
 
-If you complete the challenge successfully, you’ll get a chance to talk with our team at Cybee.ai!
+- **Backend**: Node.js with Fastify
+- **Queue**: BullMQ with Redis
+- **Database**: MongoDB
+- **Monitoring**: Elasticsearch
+- **Containerization**: Docker
 
----
+## Setup Instructions
 
-## Tech Stack Requirements
-Your solution must be built using:
+### Prerequisites
+- Docker and Docker Compose
+- Node.js 18+ (for local development)
 
-- Node.js
-- Fastify (for API development)
-- MongoDB (for storing sources and logs)
-- Redis (for caching and job scheduling)
-- Elasticsearch (for log indexing) (optional but a plus)
-- Google Workspace Admin SDK (for fetching event logs)
+### Quick Start
 
-## Requirements
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd backend-challenge
+```
 
-### 1. Build a Secure REST API
-Develop a **Fastify-based API** that allows users to connect a cloud event source and receive logs.
+2. Start the services:
+```bash
+docker compose up -d
+```
 
-#### Endpoints
-- `POST /add-source`
-  - Accepts **Google Workspace** as a source type.
-  - Stores API credentials securely.
-  - Validates credentials before storing.
-  
-- `DELETE /remove-source/:id`
-  - Removes an existing event source.
+The application will be available at `http://localhost:3000`.
 
-- `GET /sources`
-  - Returns a list of active sources.
+### Environment Variables
 
----
+```env
+NODE_ENV=production
+PORT=3000
+MONGODB_URI=mongodb://mongodb:27017/cybee
+REDIS_HOST=redis
+REDIS_PORT=6379
+ELASTICSEARCH_NODE=http://elasticsearch:9200
+ENCRYPTION_KEY=your_secure_key
+```
 
-### 2. Source Configuration & Data Model
-When a user adds a Google Workspace integration, the system should store:
-```json
+## API Documentation
+
+### Sources API
+
+#### Create a Source
+```http
+POST /api/sources
+Content-Type: application/json
+
 {
-  "id": "uuid",
   "sourceType": "google_workspace",
   "credentials": {
-    "clientEmail": "string",
-    "privateKey": "string",
-    "scopes": ["admin.googleapis.com"]
+    "client_id": "your_client_id",
+    "client_secret": "your_client_secret",
+    "refresh_token": "your_refresh_token"
   },
-  "logFetchInterval": 300,
-  "callbackUrl": "https://example.com/webhook"
+  "callbackUrl": "https://your-webhook.com/logs",
+  "logFetchInterval": 30
 }
 ```
-**Notes:**
-- Credentials should be **stored securely** (e.g., encrypted in MongoDB).
-- `logFetchInterval` defines how often logs should be fetched (in seconds).
-- `callbackUrl` is where processed logs should be sent.
 
----
+#### Get All Sources
+```http
+GET /api/sources
+```
 
-### 3. Fetch & Forward Logs Automatically
-- Once a source is added, the system should:
-  - **Schedule a job** to fetch logs at `logFetchInterval` (e.g., using a queue like BullMQ).
-  - Call **Google Workspace Admin SDK** (`Reports API`) to fetch **audit logs**.
-  - **Forward logs** to the `callbackUrl` of the source.
-  - **Retry failed requests** and handle rate limits.
+#### Get Source by ID
+```http
+GET /api/sources/:id
+```
 
-**Example Log from Google Workspace:**
-```json
+#### Update Source
+```http
+PUT /api/sources/:id
+Content-Type: application/json
+
 {
-  "id": "log-id",
-  "timestamp": "2024-03-10T12:00:00Z",
-  "actor": {
-    "email": "admin@example.com",
-    "ipAddress": "192.168.1.1"
-  },
-  "eventType": "LOGIN",
-  "details": {
-    "status": "SUCCESS"
+  "callbackUrl": "https://new-webhook.com/logs",
+  "logFetchInterval": 60
+}
+```
+
+#### Delete Source
+```http
+DELETE /api/sources/:id
+```
+
+## Job Scheduling and Retry Mechanism
+
+### Scheduling
+- Uses BullMQ for reliable job scheduling
+- Each source has its own recurring job based on `logFetchInterval`
+- Jobs are distributed across workers using Redis
+- Stalled job detection with 60s interval
+- Automatic cleanup of completed jobs (keeps last 10)
+
+### Retry Strategy
+```javascript
+{
+  attempts: 3,
+  backoff: {
+    type: 'exponential',
+    delay: 2000  // Base delay of 2 seconds
   }
 }
 ```
 
----
+- Failed jobs are retried up to 3 times
+- Exponential backoff between retries
+- Failed jobs are kept for 24 hours for inspection
+- Job status is tracked in MongoDB
 
-### 4. Handle Edge Cases
-Your system should properly handle:
-**API rate limits** – Backoff and retry.  
-**Credential expiration** – Detect and alert the user.  
-**Callback failures** – Retry failed webhook deliveries.  
-**Duplicate logs** – Ensure logs are not duplicated.  
-**High availability** – Ensure logs keep flowing even if one instance restarts.  
+## Monitoring
 
----
+### Elasticsearch Integration
+- Log metrics stored in Elasticsearch
+- Indexed data includes:
+  - Source ID
+  - Activity Type
+  - Application
+  - Timestamp
+  - Error states
 
-### 5. Deployment & Bonus
-- (Required) Provide a **README** with:
-  - Setup instructions.
-  - API documentation.
-  - Explanation of how retries and scheduling work.
-- (Bonus) Deploy the solution using **Docker & a cloud provider**.
-- (Bonus) Implement **monitoring** (e.g., log metrics to Elasticsearch).
+### Health Checks
+- `/health` endpoint for service health
+- Redis connection monitoring
+- MongoDB connection status
+- Elasticsearch cluster health
 
----
+### Error Handling
+- Comprehensive error logging
+- Invalid credential detection
+- Webhook delivery confirmation
+- Rate limiting protection
 
-## How to Submit
-1. Fork this repository and implement your solution in a `backend/` folder.
-2. Add a `README.md` with setup and usage instructions.
-3. Submit a pull request.
+## Docker Deployment
 
-If your solution meets the challenge requirements, we’ll reach out to schedule a conversation. Looking forward to seeing your work!
+The application is containerized using Docker with the following services:
+- Application (Node.js)
+- MongoDB (data persistence)
+- Redis (job queue)
+- Elasticsearch (monitoring)
 
+### Container Health Checks
+```yaml
+healthcheck:
+  test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/health"]
+  interval: 10s
+  timeout: 5s
+  retries: 3
+```
+
+### Resource Management
+- Elasticsearch memory limited to 256MB
+- Redis persistence disabled for performance
+- MongoDB with persistent volume
+
+## Cloud Deployment (AWS Example)
+
+1. Push Docker images to ECR:
+```bash
+aws ecr get-login-password --region region | docker login --username AWS --password-stdin aws_account_id.dkr.ecr.region.amazonaws.com
+docker tag backend-challenge:latest aws_account_id.dkr.ecr.region.amazonaws.com/backend-challenge:latest
+docker push aws_account_id.dkr.ecr.region.amazonaws.com/backend-challenge:latest
+```
+
+2. Deploy using ECS:
+- Use ECS Fargate for serverless container management
+- Set up Application Load Balancer
+- Configure Auto Scaling based on queue size
+- Use EFS for persistent storage
+
+## Security Considerations
+
+- Credentials encrypted at rest
+- HTTPS required for webhook endpoints
+- Rate limiting on API endpoints
+- No sensitive data in logs
+- Regular security updates
+
+## Performance Optimization
+
+- Connection pooling for MongoDB
+- Redis queue optimization
+- Elasticsearch index lifecycle management
+- Efficient log batching
+- Concurrent job processing
+
+## Troubleshooting
+
+Common issues and solutions:
+1. Redis connection errors: Check Redis container health
+2. Job processing delays: Verify worker configuration
+3. Webhook failures: Check network connectivity
+4. Invalid credentials: Verify Google Workspace setup
+
+## Development
+
+### Local Setup
+```bash
+npm install
+npm start
+```
+
+### Testing
+```bash
+npm test
+```
+
+### Code Style
+- ESLint configuration
+- Prettier formatting
+- Git hooks for pre-commit checks
